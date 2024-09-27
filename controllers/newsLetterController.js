@@ -17,4 +17,14 @@ const getAllEmails = async (req, res) => {
   res.status(StatusCodes.OK).json({ emails });
 };
 
-export { saveEmail, getAllEmails };
+const deleteNewsLetter = async (req, res) => {
+  const { id } = req.params;
+  const newsLetter = await NewsLetter.findByIdAndDelete(id);
+  if (!newsLetter) {
+    throw new NotFoundError(`News Letter with ID ${id} not found`);
+  }
+
+  res.status(StatusCodes.OK).json({ msg: "News Letter deleted successfully" });
+};
+
+export { saveEmail, getAllEmails, deleteNewsLetter };

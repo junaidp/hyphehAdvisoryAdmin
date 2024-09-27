@@ -18,10 +18,9 @@ const saveBlog = async (req, res) => {
 
 // Get all blogs
 const getAllBlogs = async (req, res) => {
-  const blogs = await Blogs.find();
+  const blogs = await Blogs.find().select("title image category createdAt");
   res.status(StatusCodes.OK).json({ blogs });
 };
-
 // Get blogs by category
 const getBlogsByCategory = async (req, res) => {
   const { category } = req.query;
@@ -30,7 +29,6 @@ const getBlogsByCategory = async (req, res) => {
     throw new BadRequestError("Please provide a category");
   }
 
-  // Check if the category is valid by comparing it with the allowed enum values
   const allowedCategories = [
     "Manufacturing Industry",
     "Telecom Industry",
@@ -51,4 +49,76 @@ const getBlogsByCategory = async (req, res) => {
   res.status(StatusCodes.OK).json({ blogs });
 };
 
-export { saveBlog, getAllBlogs, getBlogsByCategory };
+// Get a single blog by ID
+const getSingleBlog = async (req, res) => {
+  const { id } = req.params;
+
+  const blog = await Blogs.findById(id);
+
+  if (!blog) {
+    throw new NotFoundError(`Blog with ID ${id} not found`);
+  }
+
+  res.status(StatusCodes.OK).json({ blog });
+};
+
+// Delete a single blog by ID
+const deleteBlog = async (req, res) => {
+  const { id } = req.params;
+
+  const blog = await Blogs.findByIdAndDelete(id);
+
+  if (!blog) {
+    throw new NotFoundError(`Blog with ID ${id} not found`);
+  }
+
+  res.status(StatusCodes.OK).json({ msg: "Blog deleted successfully" });
+};
+
+// Edit (update) a blog by ID
+const editBlog = async (req, res) => {
+  const { id } = req.params;
+  const { title, description, image, category } = req.body;
+
+  // Validate input
+  if (!title || !description || !image || !category) {
+    throw new BadRequestError("Please provide all values");
+  }
+
+  // Check if the category is valid
+  const allowedCategories = [
+    "Manufacturing Industry",
+    "Telecom Industry",
+    "Energy",
+    "Utilities",
+    "Healthcare",
+    "Real Estate",
+    "Basic Materials",
+    "Technology",
+  ];
+
+  if (!allowedCategories.includes(category)) {
+    throw new BadRequestError("Invalid category provided");
+  }
+
+  const blog = await Blogs.findByIdAndUpdate(
+    id,
+    { title, description, image, category },
+    { new: true, runValidators: true }
+  );
+
+  if (!blog) {
+    throw new NotFoundError(`Blog with ID ${id} not found`);
+  }
+
+  res.status(StatusCodes.OK).json({ msg: "Blog updated successfully", blog });
+};
+
+export {
+  saveBlog,
+  getAllBlogs,
+  getBlogsByCategory,
+  getSingleBlog,
+  deleteBlog,
+  editBlog,
+};
